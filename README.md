@@ -452,6 +452,86 @@ Please perform the follow steps:
 
     you are in.
 
+11. Follow the remaining steps to resize your micro SD disk.
+    When you reboot the BBB, it is no longer necessary to
+    hold down the boot button.
+
+
+## Download ROS Indigo to BBB
+
+Please acquire and connect an ethernet cable between the
+BBB and your network.  We are assuming that your network
+is running DHCP (Dynamic Host Configuration Protocol) so that
+the BBB can access other resources out in the global internet.
+
+Ubuntu uses the Debian package manager for downloading
+software packages.  The software packages live in package
+repositories located on the net.  The information stored
+in the `/etc/apt` directory lists all of the locations
+to download software from.  We will need to ensure
+that the Debian package manager is configured to find
+all of the ARM7 ROS packages.
+
+The
+  [UbuntuArm](http://wiki.ros.org/indigo/Installation/UbuntuARM)
+web page gives instructions for downloading ROS to an
+ARM processor like the BBB.  Just ignore section 2.1.
+The Linux image has the correct values in `/etc/apt/sources.list`.
+If you want to find out more about the files in `/etc/apt`, the 
+  [Repositories Command Line](https://help.ubuntu.com/community/Repositories/CommandLine)
+web page explains what is going on.  You really do not need
+to bother with this.
+
+Just follow the remaining instructions from section 2.2 onward.
+
+If you can run the `roscore` command, ROS has been installed.
+
+## Additional BBB Configuration
+
+We think it is good to create a new user account on the BBB.
+This makes it a little easier to use the `ssh` (Secure Shell)
+command to communicate between the BBB and your development
+desktop/laptop.  If you are logged onto YOUR_USER_NAME
+on your development desktop/laptop, we recommand that you create
+a new BBB user account named YOUR_USER_NAME.
+
+The `adduser` command will prompt for the information needed
+to create your new user account:
+
+        $ sudo adduser YOUR_USER_NAME
+        # Provide passwords and other information here.
+
+The `adduser` command does not add you to the appropriate
+secondary groups that the `ubuntu` user account has.
+We want YOUR_USER_NAME to have the same privileges that
+the `ubuntu` account has.  To see what groups `ubuntu`
+has, please run the `groups` command:
+
+        $ groups
+        ubuntu adm kmem dailout cdrom ...
+
+In order for the YOUR_USER_NAME account to have the same groups,
+the following command will do the trick:
+
+        $ for g in `groups` ; do sudo usermod -a -g $g YOUR_USER_NAME ; done
+
+Note that we use accent graves (backward single quotes) instead
+of single quotes in the command above.
+
+From your development desktop/laptop, please try
+
+If you want to change the name of the machine from `arm` to something
+else (e.g. NEW_HOSTNAME.)  This is done by:
+
+        sudo echo NEW_HOSTNAME > /etc/hostename
+        sed s/arm/NEW_HOSTNAME/ < /etc/hosts > /tmp/hosts
+        sudo mv /tmp/hosts /etc/hosts
+
+where NEW_HOSTNAME is replaced by your chosen host name.
+
+## Configure BBB for Wireless Access
+
+
 
 
 ## More Stuff
