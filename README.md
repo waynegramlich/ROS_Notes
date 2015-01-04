@@ -296,6 +296,164 @@ the following name spaces:
 * *Parameters*: The parameters name space appears to be hierarchical.
 `rosparam list` lists the currenta active parameters.
 
+## Installing Ubuntu on a Beaglebone Black
+
+We abbreviate Beaglebone Black as BBB.
+
+Please perform the follow steps:
+
+1. Acquire a micro-SD card that has at least 2GB of storage.
+   You should also acquire a micro SD to regular SD adpater.
+
+2. Visit the following
+     [BBB/UBuntu page](http://elinux.org/BeagleBoardUbuntu#BeagleBone.2FBeagleBone_Black)
+   and follow the instructions for downloading the image, verifying
+   the checksum, and uncompressing the image.  Do not execute the
+   `sudo dd if=... of=/dev/sdX` command yet.
+
+3. The `dd` command is a disk to disk copy command.  In order to use it,
+   we need to replace `od=/dev/sdX` with the correct value.  This is a bit
+   involved.  First, we figure out what is mounted *before* we plug in
+   the micro SD card.  Run the follow command first:
+
+        sudo blkid
+
+4. Now plug the micro SD card into your memory card slot.  Rerun the
+   `sudo blkid` commands.  You should see a new entry that looks
+   something like:
+
+        /dev/mmcblk0p1 UUID="..." TYPE="..."
+
+    It could also look like:
+
+        /dev/sdc0 UDID="..." TYPE="..."
+
+    The device name is broken into a base name and a partition name.
+    For `/dev/mmcblk0p1`, the base name is `/dev/mmcblk0` and the
+    partition name is `p1`.  For `/dev/sdc0`, the device name is
+    `/dev/sdc` and the partition is `0`.
+
+5. We want to ensure that the device is **NOT** mounted.
+   Bad things happen if the `dd` command is run on a device
+   that is mounted.  Please run the following command:
+
+        mount
+
+   The `mount` command will list all devices that are mount on
+   the computer.  If you see the micro SD card device in the list,
+   your system has automatically mounted your micro SD card.
+   If you see something like:
+
+        /dev/mmcblk0p1 on /media/...
+
+   You need to run the `umount` command as follows:
+
+        umount /dev/mmcblk0p1
+
+   This will unmount the device.  Sometimes the `umount` command
+   will come back with an error that says `Device is busy`.
+   When this happens, you need to find the
+     [process](http://stackoverflow.com/questions/624154/linux-which-process-is-causing-device-busy-when-doing-umount)
+   that is using the file and
+     [kill](https://www.digitalocean.com/community/tutorials/how-to-use-ps-kill-and-nice-to-manage-processes-in-linux)
+   the process.
+
+   Please rerun the `mount` command to make sure the device is **NOT
+   MOUNTED**.
+
+6. Finally, it is possible to run the `dd` command shown on the
+     [BBB/UBuntu page](http://elinux.org/BeagleBoardUbuntu#BeagleBone.2FBeagleBone_Black).
+   Replace the `/dev/sdX` with the device name without a partition
+   name (e.g. `/dev/mmcblk0` or `/dev/sdc`).  This will take a number
+   minutes.  It will be done when you see the command line prompt
+   again.  It is safe to simply remove the micro SD card because
+   the system does not have it mounted.
+
+7. Remove the micro SD card from the SD card adapter and insert it
+   into the BBB.  The micro SD card slot is on the bottom of the BBB.
+
+8. Acquire a
+     [3.3V USB to 6-pin](http://www.digikey.com/product-detail/en/TTL-232R-3V3/768-1015-ND/1836393)
+   cable.  These cable are available from
+     [multiple vendors](http://octopart.com/ttl-232r-3v3-ftdi-5416714)
+   as different prices.  These cables are kind of a defacto standard and
+   they show up all the time.  You might want to buy more than one of them.
+
+   Once you have one please plug the cable into the Debug Serial
+   Header (J1) of on the BBB.  The black wire on the cable (pin 1)
+   should go to the pin with the white dot on J1.  Plug the other
+   end of the cable into a USB socket on your laptop/desktop.
+
+   Please run the following command under Linux:
+
+        minicom
+
+   The `minicom` command will probably find the serial cable.
+   Using Control-A follow by the letter 'o', please use the
+   arrow keys and keyboard to ensure that the serial port is
+   configured to a speed of `115200`, a parity of `None`,
+   a data of `8` a stop bits of `1`.  This is called `8-N-1`
+   format.  Make sure that both hardware and software flow
+   control are set to 'No'.  When you are done with configuration,
+   use the `Exit` option to exit to the terminal window.
+
+9. This is the step where the BBB gets powered up.  You are
+   going to need to depress and hold the boot button (see below)
+   as you power up the BBB.
+
+   There are two places  where the BBB can be powered up from.
+   You can either use the "5V" power jack or the USB client connector 
+   located on the bottom of the BBB.  The USB client connector
+   is located near the large metal Ethernet connector on top.
+   The BBB comes with a short cable that plugs into this connector.
+   If you decide to use the USB client connector, leave the small
+   end disconnected, but plug the large end into your desktop/laptop.
+   For the 5V power jack option, you have to find the correct
+   power supply (5 Volts) and the correct connector.  Again,
+   do not plug it in yet.
+
+   Now find the boot button located on top near the micro SD
+   card located on the bottom.  Unfortunately, the boot button
+   is *NOT* labeled.  However, the boot button is the only button
+   on that side of BBB.  The boot button tells the BBB where
+   to find the Linux kernel.  If the boot button is depressed,
+   the BBB will look for the Linux kernel in the micro SD socket;
+   otherwise, if the boot button is not depressed, it looks for
+   the Linux Kernel in one of the on board BBB chips.  You want
+   the BBB to use the Linux kernel that you just so laboriously
+   installed on the micro SD card.  So, when you apply power to
+   BBB, you will be depressing the boot button.
+
+   Now make sure that you can see the window that is running
+   minicom.  As soon as power is applied, you will want to
+   start looking at this window.  You will want to see
+   `Starting kernel ...`
+
+   This is the step where we apply power to the BBB. While holding
+   down the boot button, apply power to the BBB.  Some LED's
+   will start to light up and hopefully some text will start
+   to show up in minicom.  Once `Starting kernel ...` shows
+   up you can release the boot button.  After you see a screen
+   full of text scroll by, you can release the boot button.
+
+   When you see `arm login:` in minicom, you are ready to
+   login.  Please ensure that it says:
+
+        Ubuntu 14.04.1 LTS arm ttyO0
+
+   a few lines earlier.  The import part is `Ubuntu 14.04`,
+   whereas the rest could be slightly different.
+
+10. Please log in by typing in `ubuntu` as the user name
+    and `temppwd` as the password.  Note that there are
+    to `p`'s in `temppwd`.  When you see:
+
+        ubuntu@arm:~$
+
+    you are in.
+
+
+
 ## More Stuff
 
 In the "Understanding Topics" tutorial, the rtq graphic
@@ -312,4 +470,4 @@ wiki page.
 Probably what comes next is to go the through the tf
 [tf (transforms)](http://wiki.ros.org/tf/Tutorials).
 
- 
+
