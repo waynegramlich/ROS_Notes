@@ -373,10 +373,10 @@ Please perform the follow steps:
    into the BBB.  The micro SD card slot is on the bottom of the BBB.
 
 8. Acquire a
-     [3.3V USB to 6-pin](http://www.digikey.com/product-detail/en/TTL-232R-3V3/768-1015-ND/1836393)
-   cable.  These cable are available from
+     [3.3V USB to 6-pin](http://elinux.org/Beagleboard:BeagleBone_Black_Serial)
+   cable.  These cables are available from
      [multiple vendors](http://octopart.com/ttl-232r-3v3-ftdi-5416714)
-   as different prices.  These cables are kind of a defacto standard and
+   at different prices.  These cables are kind of a defacto standard and
    they show up all the time.  You might want to buy more than one of them.
 
    Once you have one please plug the cable into the Debug Serial
@@ -529,10 +529,136 @@ else (e.g. NEW_HOSTNAME.)  This is done by:
 
 where NEW_HOSTNAME is replaced by your chosen host name.
 
+Other stuff to download:
+
+        sudo apt-get install emacs
+
+## BBB Serial Port
+
+Way back around Linux kernel 3.2, Linus Torvolds complained
+loudly that all of the Arm processors out there were causing
+too much kernel source code churn.  This triggered a long and
+tedidous development of something called "device trees" that
+are primarily used by ARM processors.
+
+A great deal of effort went into developing something called
+the cape manager for Beaglebone class of processors.  By
+Linux kernel 3.8 it worked reasonably well.  Alas, Ubuntu 14.04
+uses Linux kernel 3.14 and the cape manager no longer works
+on 3.14.  Thus, configuring the pin-outs on the BBB  for 3.14
+requires more tedious device tree configuration.
+
+There are two kinds of device tree files -- `.dts` (Device
+Tree Source) and `.dtb` (Device Tree Blob) files.  There
+is a compilier, called `dtc`, convert between the two
+formats.
+
+When the Linux 3.14 kernel boots on the BBB, it processes a
+`.dtb` file to configure the machine including all of the
+I/O pins.  The `.dtb` file must live in a directory called
+`/boot/dtbs/KERNEL`, where KERNEL is `3.14.22-ti-r31` for
+Ubuntu 14.04.
+
+It turns out the `bus_beaglebone` PCB needs to connect to the
+UART2 pins on BBB.  These pins a located at pins P9-22 (RX) and
+P9-21 (TX).  There are two files locad in the `/boot/dtbs/.../`
+called `am335x-boneblack.dtb` and `am335x-boneblack-ttyO2.dtb`
+respectively.  The former is what is standardly used during
+boot up time.  The later, is one that that configures the two
+I/O pins to connect to UART2.
+
+It is useful to see how this all works, so we recommend that
+you download the `dtc` compiler using the following command:
+
+	sudo apt-get install device-tree-compiler
+
+Now using the `dtc compiler`, please convert the `.dtb` files
+back into `.dtc` files:
+
+        cd /boot/dtbs/3.14.22-ti-r31
+        dtc -I dtb -O dts -o /tmp/am334x-boneblack-ttyO2.dts am335x-boneblack-ttyO2.dtb
+        dtc -I dtb -O dts -o /tmp/am334x-boneblack.dts am335x-boneblack.dtb
+
+Using your favorite source code difference tool, you see the
+differences between the `.dts` files.  Since most decent
+source differencing tools use a GUI, we recommend that you
+copy the files over your desktop/laptop development machine.
+Here are some command that will do that when executed on
+the desktop/laptop:
+
+        cd /tmp
+        scp "arm.local:*.dts" .
+        tkdiff *.dts
+
+The first thing you will note is that within the `.dts` file,
+the UART's are called `uart1` through `uart6`.  It turns out
+that `/dev/ttyO2` (the serial device we are interested in)
+is bound to `uart3` in the `.dtb` file.
+
+If you want to generate your own custom `.dbs` file you
+can start with `am334x-boneblack.dts` file and use reverse
+compiled `.dts` files from the `/boot/dtbs/...` directory
+to make changes.  When you are done, you can compile the
+`your.dts` file into a `dtb` file as follows:
+
+    sudo dtc -I dts -O dtb -o /boot/dtbs/.../your.dtb your.dts.
+
+A custom `.dtb` is configured to be loaded at boot time by
+editing the file `/boot/uboot/uDev.txt` as
+  [described](http://elinux.org/Beagleboard:Capes_3.8_to_3.14#Custom_dtb) .
+In short, you add a line that says:
+
+        dtb=your.dtb
+
+If you only need to enable /dev/ttyO2, it is acceptable to just
+use the existing `.dtb` file:
+
+        dtb=am335x-boneblack-ttyO2.dtb
+
+
+Download and install `minicom`:
+
+        sudo apt-get install minicom
+
+Short pins 21 and 22 togetehr and run `minicom`.
+When you type into minicom, the characters should echo back.
+
+(Drats it still does not work!)
+
 ## Configure BBB for Wireless Access
 
 
 
+## Random Stuff to be Deleted
+
+The
+  [Device Tree Overlays](http://www.armhf.com/beaglebone-black-serial-uart-device-tree-overlays-for-ubuntu-and-debian-wheezy-tty01-tty02-tty04-tty05-dtbo-files/)
+web page seems useful.  The comments are pretty interesting as well.
+
+The following command will produce a `.dts` file from a `.dtb` file:
+
+        dtc -I dtb -O dts -o /tmp/ttyO2.dts /boot/dtbs/3.14.22-ti-r31/am335x-boneblack-ttyO2.dtb
+
+An interesting strategy for 
+
+  [simple dtc stuff](https://github.com/RobertCNelson/rscm/blob/master/build.sh)
+
+  [more dtc stuff](http://hipstercircuits.com/adding-beaglebone-cape-support-to-a-kernel-with-device-tree-in-ubuntu/)
+
+There seem to be a bunch of `.dtb` files in `/boot/dtbs/{os_dir}/`.
+`.dtb` files appear to be binary.
+
+There is
+  [another tutorial](http://xillybus.com/tutorials/device-tree-zynq-1)
+that is focused on FPGA's.
+
+Will I have to
+  [compile a BBB kernel](http://wiki.beyondlogic.org/index.php?title=BeagleBoneBlack_Building_Kernel)
+to get my grubby paws on a `.dts` file?
+
+Some info about
+  [UBoot](http://www.twam.info/hardware/beaglebone-black/u-boot-on-beaglebone-black)
+is available.
 
 ## More Stuff
 
