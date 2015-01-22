@@ -473,7 +473,7 @@ that the Debian package manager is configured to find
 all of the ARM7 ROS packages.
 
 The
-  [UbuntuArm](http://wiki.ros.org/indigo/Installation/UbuntuARM)
+  [ROS UbuntuArm](http://wiki.ros.org/indigo/Installation/UbuntuARM)
 web page gives instructions for downloading ROS to an
 ARM processor like the BBB.  Just ignore section 2.1.
 The Linux image has the correct values in `/etc/apt/sources.list`.
@@ -513,7 +513,7 @@ has, please run the `groups` command:
 In order for the YOUR_USER_NAME account to have the same groups,
 the following command will do the trick:
 
-        $ for g in `groups` ; do sudo usermod -a -g $g YOUR_USER_NAME ; done
+        $ for g in `groups` ; do sudo usermod -a -G $g YOUR_USER_NAME ; done
 
 Note that we use accent graves (backward single quotes) instead
 of single quotes in the command above.
@@ -532,6 +532,60 @@ where NEW_HOSTNAME is replaced by your chosen host name.
 Other stuff to download:
 
         sudo apt-get install emacs
+
+## Removing USB0
+
+To remove the /dev/usb0 network device that shows up when
+you power the BBB throught the USB connector it is necessary
+to edit to files.
+
+* Edit `/etc/network/interfaces`.  Go to the end and comment
+  out the following chunck of configuration:
+
+        iface usb0 inet static
+            address 192.168.7.2
+            netmask 255.255.255.0
+            network 192.168.7.0
+            gateway 192.168.7.1
+
+  to look like:
+
+        #iface usb0 inet static
+        #    address 192.168.7.2
+        #    netmask 255.255.255.0
+        #    network 192.168.7.0
+        #    gateway 192.168.7.1
+
+
+* Edit `/opt/scripts/boot/am335x_evm.sh`.  Replace:
+
+        if [ -f /etc/udhcpd.conf] ; then
+
+  with
+
+        if [ false && -f /etc/udhcpd.conf] ; then
+
+  Next, replace:
+
+        if [-f /etc/dnsmasq.d/usb0-dhcp ] ; then
+
+  with
+
+        if [ false && -f /etc/dnsmasq.d/usb0-dhcp ] ; then
+
+  Place a `#` at the being of the line:
+
+        usb0_addr=$(ip addr list usb0 ...
+
+  Replace
+
+        if [ ! "x${usb0_addr}" = "x" ] ; then
+
+  else
+
+        if [ false && ! "x${usb0_addr}" = "x" ] ; then
+
+Now reboot the BBB.
 
 ## BBB Serial Port
 
@@ -615,7 +669,6 @@ use the existing `.dtb` file:
 
         dtb=am335x-boneblack-ttyO2.dtb
 
-
 Download and install `minicom`:
 
         sudo apt-get install minicom
@@ -676,4 +729,196 @@ wiki page.
 Probably what comes next is to go the through the tf
 [tf (transforms)](http://wiki.ros.org/tf/Tutorials).
 
+## Banana Pro Configuration:
 
+Below are 
+
+* Copy .img file onto micro SD card:
+
+        time sudo dd if=Lubuntu_For_BananaPro_v1412.img of=/dev/mmcblk0 # 12min
+
+  Obviously, `/dev/mmcblk0` may not be the correct value for your
+  system.  See the section on the BeagleBone Black (BBB.)
+
+* Update system (with wired Ethernet):
+
+        time sudo apt-get update	# ~1min
+        time sudo apt-get upgrade	# ~25min
+
+* Create your user account:
+
+        sudo adduser YOUR_USER_NAME
+        # Provide passwords etc.
+        for g in `groups` ; do sudo usermod -a -G $g YOUR_USER_NAME ; done
+        sudo vi /etc/sodoers
+	# Add line "YOUR_USER_NAME ALL=(ALL:ALL) ALL" to file
+	# right after "bananapi ALL=(ALL:ALL) ALL)" in file.
+
+* Login as YOUR_USER_NAME:
+
+        sudo su YOUR_USER_NAME
+
+* Install ROS Indigo:
+
+        sudo update-locale LANG=C LANGUAGE=C LC_ALL=C LC_MESSAGES=POSIX
+        sudo sh -c 'echo "deb http://packages.namniart.com/repos/ros trusty main" > /etc/apt/sources.list.d/ros-latest.list'
+        wget http://packages.namniart.com/repos/namniart.key -O - | sudo apt-key add -
+        time sudo apt-get update			# ~1min
+        time sudo apt-get install ros-indigo-ros-base	# ~14min
+	sudo apt-get install python-rosdep
+        time rosdep update				# ~1min
+        echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
+        source ~/.bashrc
+        sudo apt-get install python-rosinstall		# ~4min
+
+* Configuring WiFi:
+
+  I found the
+  [nmcli discssion](http://arstechnica.com/civis/viewtopic.php?t=1163023)
+  to be interesting and useful.
+
+  Here is what has been figured out.  There are 4 systems that
+  seem to be interacting with one another:
+
+  * *systemd*. This is the new dependency based system initialization
+    system.  There is a great deal of contraversy about it.  Regardless,
+    of the contraversy, it is what is used for initialization in the
+    kernel that ships with the Banana Pro.
+
+  * *dbus*.  This is a general purpose publish and subscribe messaging
+    system that is used a lot by Linux systems, particularly desktop
+    GUI's like Gnome and KDE.
+
+  * *wpa_supplicate*.  This a process that seems to manage wifi interfaces.
+
+  * *network_manager*.  This mostly a GUI program for managing network
+    connections.  It also has a command line interface.  The network
+    manager also manages its "database" of information about connections.
+
+  All four of these systems are enabled and interact with one another.
+  While it is tempting to try and work around them, it appears to
+  be easier to just work with what is already there.
+
+  The file `/etc/NetworkManger/NetworkManager.conf` is pretty
+  short and configures the network manager.  The line:
+
+        plugins=ifupdown,keyfile,ofono
+
+  is what enables key files.  Key files get stored down in
+  `/etc/NetworkManager/system-connections`.  There will be one
+  file in this directory for each WiFi access point SSID/password
+  pair.  Note that these files are owned by `root` and have root
+  only access (i.e. `-rw------- root root`.)
+
+  The `nmcli` program is used to set things up:
+
+  * List the avaiable connections:
+
+        sudo nmcli connect list
+        # Connection list shows up here
+
+  * Shut down the wired connection (not sure this works):
+
+        sudo nmcli connect down id "Wired connection 1"
+        sudo nmcli device disconnect iface eth0
+
+  * List the available access points:
+
+        sudo nmcli device wifi list
+        # Access points listed here
+
+  * Now we can connect to the accesss point:
+
+        sudo nmcli device wifi connect SSID password "PASSWORD"
+
+    where SSID is the access point name and PASSWORD is the
+    access point password.  This should create a file named
+    `/etc/NetworkManager/system-connections/SSID`.  This
+    file contains the SSID and the password (in the clear.)
+
+  * Unplug the wired cable and reboot:
+
+        sudo reboot
+
+* Expand the file system (how?):
+
+## Random Stuff
+
+I found the
+    [rosccpp internals](http://wiki.ros.org/roscpp/Internals)
+to be useful.  An
+    [associated post](https://bcharrow.wordpress.com/2013/06/17/subscribing-to-a-topic-in-roscpp/)
+was useful as well.
+
+## Create ROS Package for a git Repository
+
+### Create the ROS package
+
+As per the tutorials, you go to your catkin workspace:
+
+        cd .../catkin_ws
+
+Now move into the `src` directory:
+
+        cd src
+
+Now run `catkin_create_pkg`:
+
+        catkin_create_pkg new_package_name std_msgs rospy roscpp
+
+where `new_package_name` is the name of the new ROS package.
+
+### Create the Git Repository
+
+(This example uses `github.com` as the repository.  Obviously,
+different repository vendors have a different user interface.
+Furthermore, most repository vendors change the user interface
+many times a year, so the directions below are kind of a hint
+for what needs to be done, rather than an exact recipe.)
+
+Using a browser, visit `https://github.com/your_github_account`
+where `your_github_account` is your repository account name.
+
+Using the browser, click on the `[Repositories]` tab, followed
+by clicking on the `[New]` tab.
+
+Now fill int the `Repository name` field with exactly the
+name of the catkin package you created previously (i.e.
+`new_package_name`.)  Fill in the `Description` field as well.
+Select `(x) Public` and leave
+`[ ] Initialize this repository with a README` unchecked.
+Finally, click on `[Create repository]`.
+
+## Now we go back and connect the catkin package to `git`.
+
+In `.../catkin_ws/src/new_package_name`, do the following:
+
+1. Create a `README.md` file:
+
+        echo "# new_package_name" >> README.md
+
+2. Get the local `git` repository created:
+
+        git init
+
+3. Add files to repository:
+
+        git add CMakeLists.txt README.md package.md
+
+4. Commit the changes:
+
+        git commit -m "Initial commit."
+
+5. Connect the local repository to the remote repository:
+
+        git remote add origin https://github.com/account_name/new_package_name.git
+
+   where `account_name` is your `github.com` account name and
+  `new_package_name` is the new package name.
+
+6. Shove the files up to the remote repository:
+
+        git push -u origin master
+
+
+All done.
