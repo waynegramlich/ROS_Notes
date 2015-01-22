@@ -751,8 +751,8 @@ Below are
         # Provide passwords etc.
         for g in `groups` ; do sudo usermod -a -G $g YOUR_USER_NAME ; done
         sudo vi /etc/sodoers
-	# Add line "YOUR_USER_NAME ALL=(ALL:ALL) ALL" to file
-	# right after "bananapi ALL=(ALL:ALL) ALL)" in file.
+        # Add line "YOUR_USER_NAME ALL=(ALL:ALL) ALL" to file
+        # right after "bananapi ALL=(ALL:ALL) ALL)" in file.
 
 * Login as YOUR_USER_NAME:
 
@@ -765,7 +765,7 @@ Below are
         wget http://packages.namniart.com/repos/namniart.key -O - | sudo apt-key add -
         time sudo apt-get update			# ~1min
         time sudo apt-get install ros-indigo-ros-base	# ~14min
-	sudo apt-get install python-rosdep
+        sudo apt-get install python-rosdep
         time rosdep update				# ~1min
         echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
         source ~/.bashrc
@@ -814,22 +814,22 @@ Below are
 
   * List the avaiable connections:
 
-        sudo nmcli connect list
-        # Connection list shows up here
+            sudo nmcli connect list
+            # Connection list shows up here
 
   * Shut down the wired connection (not sure this works):
 
-        sudo nmcli connect down id "Wired connection 1"
-        sudo nmcli device disconnect iface eth0
+            sudo nmcli connect down id "Wired connection 1"
+            sudo nmcli device disconnect iface eth0
 
   * List the available access points:
 
-        sudo nmcli device wifi list
-        # Access points listed here
+            sudo nmcli device wifi list
+            # Access points listed here
 
   * Now we can connect to the accesss point:
 
-        sudo nmcli device wifi connect SSID password "PASSWORD"
+            sudo nmcli device wifi connect SSID password "PASSWORD"
 
     where SSID is the access point name and PASSWORD is the
     access point password.  This should create a file named
@@ -838,7 +838,7 @@ Below are
 
   * Unplug the wired cable and reboot:
 
-        sudo reboot
+            sudo reboot
 
 * Expand the file system (how?):
 
