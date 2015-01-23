@@ -847,7 +847,7 @@ Below are
 * Resize the file system:
 
   Follow the
-  [resize instruction](http://elinux.org/Beagleboard:Expanding_File_System_Partition_On_A_microSD)
+  [resize instructions](http://elinux.org/Beagleboard:Expanding_File_System_Partition_On_A_microSD)
   to get the full extent of your micro-SD card.    
 
 * Bring up the serial port `/dev/ttyS2`
@@ -908,8 +908,8 @@ Below are
 
   * The `.fex` boards repository is kept over at `github.com`:
 
-	    cd SOMEWHERE
-	    git clone git://github.com/linux-sunxi/sunxi-boards.git
+            cd SOMEWHERE
+            git clone git://github.com/linux-sunxi/sunxi-boards.git
 
     The Banana Pro `.fex` file is:
 
@@ -917,10 +917,10 @@ Below are
 
   * Installing the `.fex` tools:
 
-	    cd SOMEWHERE
+            cd SOMEWHERE
             sudo apt-get install libusb-1.0-0-dev
             git clone  git://github.com/linux-sunxi/sunxi-tools.git
-	    cd sunx-tools
+            cd sunx-tools
             make
 
   * Directions for getting and replacing
