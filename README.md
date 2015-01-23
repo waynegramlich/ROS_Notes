@@ -836,11 +836,95 @@ Below are
     `/etc/NetworkManager/system-connections/SSID`.  This
     file contains the SSID and the password (in the clear.)
 
+  * Make sure the rest of zeroconf is installed:
+
+            sudo apt-get install libnss-mdns
+
   * Unplug the wired cable and reboot:
 
             sudo reboot
 
-* Expand the file system (how?):
+* Resize the file system:
+
+  Follow the
+  [resize instruction](http://elinux.org/Beagleboard:Expanding_File_System_Partition_On_A_microSD)
+  to get the full extent of your micro-SD card.    
+
+* Bring up the serial port `/dev/ttyS2`
+
+  Perform the following steps:
+
+  1. Shut down the Banana Pro.
+
+            sudo halt
+
+  2. Install a shorting block (i.e. a 2-pin jumper) between
+     pins 8 and 10.
+
+  3. Power up the Banana Pro.
+
+  4. Log in remotely from the desktop:
+
+            ssh lemaker.local
+            # Type in the password
+
+  5. Download `minicom`:
+
+            sudo apt-get install minicom
+
+  6. Fire up `minicom`:
+
+            minicom -D /dev/ttyS2
+            # Use [Control-A] followed by the letter 'o' to enter
+            # serial port configuration.  Using the arrow keys
+            # select "Serial port setup".  Use the letter 'F' to
+            # disable hardware flow control.  Use arrow keys to
+            # get down to "Exit"
+
+  7. Type characters into `minicom`.  They should echo because of
+     the jump strap.
+
+  8. Remove the jumper strap and type characters.  No characters should
+     echo.
+
+  7. Exit `minicom`
+
+            # Type [Control-A] followed by the letter 'x' to exit.
+
+* Some note on .fex files:
+
+  Like all ARM processors, configuring the I/O pins is currently
+  pretty challenging.  For the Banana Pro they use something called
+  a `.fex` file.  All of this stuff lives over at
+  [linux-sunxi.org](http://linux-sunxi.org/).
+
+  It turns out that none of this stuff is necessary since the `.fex`
+  file that comes with the kernel has `/dev/ttyS2` already enabled.
+  However, it was difficult to figure all this stuff out, so some
+  "tickler" notes are listed below:
+
+  * The `.fex` file format is
+    [documented](http://linux-sunxi.org/Fex_Guide).
+
+  * The `.fex` boards repository is kept over at `github.com`:
+
+	    cd SOMEWHERE
+	    git clone git://github.com/linux-sunxi/sunxi-boards.git
+
+    The Banana Pro `.fex` file is:
+
+            sunxi-boards/sys_config/a20/BananaPro.fex
+
+  * Installing the `.fex` tools:
+
+	    cd SOMEWHERE
+            sudo apt-get install libusb-1.0-0-dev
+            git clone  git://github.com/linux-sunxi/sunxi-tools.git
+	    cd sunx-tools
+            make
+
+  * Directions for getting and replacing
+    [script.bin](http://forum.lemaker.org/thread-221-1-1-.html)
 
 ## Random Stuff
 
