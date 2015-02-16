@@ -1120,18 +1120,18 @@ the other micro-SD card as Raspian.
 
 * Run the debootstrap command:
 
-	# (Get the command from Mike)
+        # Get the command from Mike
 
 * Copy some files over:
 
         cp /etc/fstab ~/ubuntu/etc
-	cp /etc/resolv.conf ~/ubuntu/resolve.conf
+        cp /etc/resolv.conf ~/ubuntu/resolve.conf
         cp /etc/hostname ~/ubuntu/hostname
         cp /etc/hosts ~/ubuntu/hosts
 
 * Mount `/proc` on `~/ubuntu/proc`:
 
-	mkdir -p ~/ubuntu/proc
+        mkdir -p ~/ubuntu/proc
         sudo mount -t proc ~/ubuntu/proc /proc
 
   This command makes it possible to access the network
@@ -1139,7 +1139,7 @@ the other micro-SD card as Raspian.
 
 * Run the `chroot` command:
 
-	# (Is this right?)
+        # Is this right?
         chroot ~/ubuntu
 
 * Now it is possible to run the `apt-get` command and
@@ -1150,7 +1150,7 @@ the other micro-SD card as Raspian.
 
         sudo apt-get install sudo net-tools vim openssh-client
         sudo apt-get install openssh-server ping
-	# (What else needs to be installed.)
+        \# What else needs to be installed?
 
 * Create `pi` user with a password of `pi`:
 
@@ -1175,18 +1175,18 @@ to the Hybrid micro-SD:
 * Mount the Hybrid micro-SD onto RasPi2 (which is
  still running off the Raspian micro-SD.)
 
-	sudo mkdir -p /mnt/hybrid
+        sudo mkdir -p /mnt/hybrid
         sudo mount /dev/?? /mnt/hybrid 
-	cd /mnt/hybrid 
+        cd /mnt/hybrid 
 
 * Delete everything but the `modules` and `/boot` directories.
 
-	# Where is the modules directory?
-	sudo -s
-	cd /mnt/hybrid
-	# Make darn sure you are deleting from the /mnt/hybrid:
+        # Where is the modules directory?
+        sudo -s
+        cd /mnt/hybrid
+        # Make darn sure you are deleting from the /mnt/hybrid:
         rm -rf bin dev etc home lib media opt sbin sys usr var
-	# Am I missing any?
+        # Am I missing any?
 
 * Copy the contents of `~/ubuntu` over to `~/mnt/hybrid`
 
