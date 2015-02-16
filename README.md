@@ -1006,3 +1006,228 @@ In `.../catkin_ws/src/new_package_name`, do the following:
 
 
 All done.
+
+## ROS on Raspberry Pi 2
+
+We are going to shorten Raspberry Pi 2 down to RasPi2
+just to save a little typing.
+
+Currently (as of Feb2015), the only two precompiled systems
+for the RasPi2 are
+[Raspian and Ubuntu Snappy](http://www.raspberrypi.org/downloads/).
+Ubuntu Snappy has a new package manager called snappy which
+is not based on Debian packages.  Currently, ROS only runs
+on Ubuntu with Debian packages.  Thus, Ubuntu Snappy is not
+compatible with ROS.  While
+[OSR intends to support Ubuntu Snappy](http://www.osrfoundation.org/ubuntu-ros-apps-on-the-way/), it may take a while to work out all of the issues.
+
+So, for now (Feb2015), that leaves us with the Raspian release.
+Raspian boots just fine on the RasPi2.  The issue is that
+the Debian releases (Wheezy and Jesse) put files in different
+locations than the Ubuntu releases.  Thus, while both Ubuntu
+and Raspian use Debian packages, the Packages are not compatible
+with one another.  Bummer!
+
+So, the basic strategy is to construct a hybrid system
+that uses the Raspian Linux kernel in conjunction with
+the Ubunutu 14.04 LTS release.  The Raspian release is
+running Linux 3.18, where as the Ubuntu 14.04 release
+is running 3.14.  The only reason why we have a chance
+of making this work is because the Linux kernel team works
+incredibly hard to keep Linux compatible from release
+to release.  (If a kernel developer breaks Linux User
+space, Linus Torvolds lets his displeasure be known.)
+
+In order to pull this all off we need the following:
+
+* A RasPI2 with appropriate power supply and network cable.
+* A desktop (or laptop) machine with an internet connection.
+* Two micro-SD cards that are at least 8GB in size.
+* A USB to micro-SD card adaptor.
+* A USB to serial adaptor.
+
+So here is an overview of what is going to happen:
+
+* We will download the Raspian release onto a desktop
+  machine over network.
+
+* The Raspian release will be copied onto both Micro-SD
+  cards.  One card will be labeled "Raspian" an the other
+  will be labeled "Hybrid".
+
+* Each Micro-SD card will be booted, updated and upgraded
+  and shut down using the network connection and the USB
+  serial cable to access the console window.
+
+* Download minimal Ubuntu system onto the Raspian micro-SD card
+  running on the RasPi2 in to a directory called `ubuntu` using
+  the `debootstrap` program.
+
+* Mount the Hybrid micro-SD card onto the Raspberry Pi 2 system
+  using the USB to micro-SD card.
+
+* Delete everything but the kernel from Hybrid Micro-SD card.
+
+* Copy everything but the kernel from the `ubuntu` directory
+  over to the hybrid Micro-SD, shut down Raspaian and boot
+  Hybrid.  We keep swapping between Hybrid and Raspian until
+  we are happy with everything.
+
+The article
+[6 Steps for Minimal Ubuntu Installation Using debootstrap](http://www.thegeekstuff.com/2010/01/debootstrap-minimal-debian-ubuntu-installation/)
+provides additional information.
+
+### Install Raspian to Micro-SD Cards
+
+Perform the following steps:
+
+* Download the Raspian Debian Wheezy release from
+  [Raspberry Pi 2 Downloads web page](http://www.raspberrypi.org/downloads/).
+
+* Unzip the downloaded file to get `2015-01-32-raspian.img`.
+
+* Using the `dd` command copy the image to a micro-SD card.
+  See the section above on the Beaglebone Black about how
+  to use the `dd` command to copy the image to the micro-SD card.
+
+* Install, a USB to serial cable on pins 6 (Ground)
+  pin 8 (TXD) and pin 10 (RXD).  Fire up `minicom` and
+  configure `minicom` to run in 8N1 mode at 11520 baud
+  with no hardware flow control.
+
+* It should boot in console mode.  You can log in via user "pi"
+  and password "raspberry".
+
+* You can shut down the system with `sudo halt`.
+
+Label one of the Raspian micro-SD cards "Hybrid" and label
+the other micro-SD card as Raspian.
+
+### Next step
+
+* Boot the Raspian Micro-SD on the RasPi2.
+
+* Create a directory:
+
+        cd ~
+        mkdir ubuntu
+        cd ubuntu
+
+* Download `debootstrap` and install it:
+
+        sudo apt-get install debootstrap
+        sudo apt-get install build-essential
+
+* Run the debootstrap command:
+
+	# (Get the command from Mike)
+
+* Copy some files over:
+
+        cp /etc/fstab ~/ubuntu/etc
+	cp /etc/resolv.conf ~/ubuntu/resolve.conf
+        cp /etc/hostname ~/ubuntu/hostname
+        cp /etc/hosts ~/ubuntu/hosts
+
+* Mount `/proc` on `~/ubuntu/proc`:
+
+	mkdir -p ~/ubuntu/proc
+        sudo mount -t proc ~/ubuntu/proc /proc
+
+  This command makes it possible to access the network
+  while running `chroot`.
+
+* Run the `chroot` command:
+
+	# (Is this right?)
+        chroot ~/ubuntu
+
+* Now it is possible to run the `apt-get` command and
+  install ubuntu packages into the ~/ubuntu/ file system.
+  (This is really, really sneaky!!!!)
+
+  Install the following packages
+
+        sudo apt-get install sudo net-tools vim openssh-client
+        sudo apt-get install openssh-server ping
+	# (What else needs to be installed.)
+
+* Create `pi` user with a password of `pi`:
+
+        # Use the `add-user` command here:
+
+* Exit `chroot`:
+
+        exit
+
+* Unmount ~/ubuntu/proc:
+
+        umount ~/ubuntu/proc
+
+
+### Transfer the Files Over to the Hybrid micro-SD.
+
+Now we transfer the Ubuntu files from the Raspian micro-SD
+to the Hybrid micro-SD:
+
+* Put the Hybrid micro-SD into the USB to micro-SD adapter.
+
+* Mount the Hybrid micro-SD onto RasPi2 (which is
+ still running off the Raspian micro-SD.)
+
+	sudo mkdir -p /mnt/hybrid
+        sudo mount /dev/?? /mnt/hybrid 
+	cd /mnt/hybrid 
+
+* Delete everything but the `modules` and `/boot` directories.
+
+	# Where is the modules directory?
+	sudo -s
+	cd /mnt/hybrid
+	# Make darn sure you are deleting from the /mnt/hybrid:
+        rm -rf bin dev etc home lib media opt sbin sys usr var
+	# Am I missing any?
+
+* Copy the contents of `~/ubuntu` over to `~/mnt/hybrid`
+
+        sudo tar cf - ~/ubuntu  | (cd ~/mnt/hybrid; tar xf -)
+
+* Missing steps:
+
+  * Add `pi` user to `/etc/sudoers`
+  * What else?
+
+* Unmount the Hybrid micro-SD:
+
+        sudo umount /mnt/hybrid
+
+* Shut down the RasPi2 running the Raspian micro-SD.
+
+        sudo halt
+
+### Boot the hybrid micro-SD:
+
+* Install the Hybrid micro-SD into RasPi2.
+
+* Boot it.
+
+* Read the boot log.
+
+* Log in as `pi` with password of `pi`.
+
+### Networking:
+
+We for now, we manually bring up the network:
+
+        ifconfig eth0 192.168.x.y netmask 255.255.255
+        route add default gw 192.168.x.yy
+
+Install more stuff.
+
+When you figure it out, add the steps to the instructions
+above.
+
+Rinse, Lather, Repeat!
+
+
+
