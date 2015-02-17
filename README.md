@@ -1241,7 +1241,7 @@ to the Hybrid micro-SD:
         sudo mount /dev/?? /mnt/hybrid 
         cd /mnt/hybrid 
 
-* Delete everything but the `/lib/modules` and `/boot` directories.
+* Delete everything but the `/lib/modules ` and `/boot` directories.
 
         # Where is the modules directory?
         sudo -s
@@ -1311,5 +1311,51 @@ come up automatically.
 
 ### Installing ROS
 
+Update `/etc/apt/sources.list` with:
 
+        # See http://help.ubuntu.com/community/UpgradeNotes for how to upgrade to
+        # newer versions of the distribution.
+        
+        deb http://ports.ubuntu.com/ubuntu-ports/ trusty main restricted
+        deb-src http://ports.ubuntu.com/ubuntu-ports/ trusty main restricted
+        
+        ## Major bug fix updates produced after the final release of the
+        ## distribution.
+        deb http://ports.ubuntu.com/ubuntu-ports/ trusty-updates main restricted
+        deb-src http://ports.ubuntu.com/ubuntu-ports/ trusty-updates main restricted
+        
+        ## N.B. software from this repository is ENTIRELY UNSUPPORTED by the Ubuntu
+        ## team. Also, please note that software in universe WILL NOT receive any
+        ## review or updates from the Ubuntu security team.
+        deb http://ports.ubuntu.com/ubuntu-ports/ trusty universe
+        deb-src http://ports.ubuntu.com/ubuntu-ports/ trusty universe
+        deb http://ports.ubuntu.com/ubuntu-ports/ trusty-updates universe
+        deb-src http://ports.ubuntu.com/ubuntu-ports/ trusty-updates universe
+        
+        ## N.B. software from this repository is ENTIRELY UNSUPPORTED by the Ubuntu 
+        ## team, and may not be under a free licence. Please satisfy yourself as to 
+        ## your rights to use the software. Also, please note that software in 
+        ## multiverse WILL NOT receive any review or updates from the Ubuntu
+        ## security team.
+        deb http://ports.ubuntu.com/ubuntu-ports/ trusty multiverse
+        deb-src http://ports.ubuntu.com/ubuntu-ports/ trusty multiverse
+        deb http://ports.ubuntu.com/ubuntu-ports/ trusty-updates multiverse
+        deb-src http://ports.ubuntu.com/ubuntu-ports/ trusty-updates multiverse
+        
+        ## N.B. software from this repository may not have been tested as
+        ## extensively as that contained in the main release, although it includes
+        ## newer versions of some applications which may provide useful features.
+        ## Also, please note that software in backports WILL NOT receive any review
+        ## or updates from the Ubuntu security team.
+        # deb http://ports.ubuntu.com/ubuntu-ports/ trusty-backports main restricted universe multiverse
+        # deb-src http://ports.ubuntu.com/ubuntu-ports/ trusty-backports main restricted universe multiverse
+        
+        deb http://ports.ubuntu.com/ubuntu-ports/ trusty-security main restricted
+        deb-src http://ports.ubuntu.com/ubuntu-ports/ trusty-security main restricted
+        deb http://ports.ubuntu.com/ubuntu-ports/ trusty-security universe
+        deb-src http://ports.ubuntu.com/ubuntu-ports/ trusty-security universe
+        deb http://ports.ubuntu.com/ubuntu-ports/ trusty-security multiverse
+        deb-src http://ports.ubuntu.com/ubuntu-ports/ trusty-security multiverse
+
+Follow Austin's directions.
 
