@@ -624,7 +624,7 @@ I/O pins to connect to UART2.
 It is useful to see how this all works, so we recommend that
 you download the `dtc` compiler using the following command:
 
-	sudo apt-get install device-tree-compiler
+        sudo apt-get install device-tree-compiler
 
 Now using the `dtc compiler`, please convert the `.dtb` files
 back into `.dtc` files:
@@ -1038,13 +1038,18 @@ incredibly hard to keep Linux compatible from release
 to release.  (If a kernel developer breaks Linux User
 space, Linus Torvolds lets his displeasure be known.)
 
+### Required Hardware
+
 In order to pull this all off we need the following:
 
-* A RasPI2 with appropriate power supply and network cable.
+* A RasPi2 with appropriate power supply and network cable.
 * A desktop (or laptop) machine with an internet connection.
 * Two micro-SD cards that are at least 8GB in size.
 * A USB to micro-SD card adaptor.
-* A USB to serial adaptor.
+* An HDMI monitor
+* A USB Keyboard.
+
+### Overview
 
 So here is an overview of what is going to happen:
 
@@ -1057,7 +1062,8 @@ So here is an overview of what is going to happen:
 
 * Each Micro-SD card will be booted, updated and upgraded
   and shut down using the network connection and the USB
-  serial cable to access the console window.
+  serial cable to access the console window.  (This may
+  change.)
 
 * Download minimal Ubuntu system onto the Raspian micro-SD card
   running on the RasPi2 in to a directory called `ubuntu` using
@@ -1066,7 +1072,8 @@ So here is an overview of what is going to happen:
 * Mount the Hybrid micro-SD card onto the Raspberry Pi 2 system
   using the USB to micro-SD card.
 
-* Delete everything but the kernel from Hybrid Micro-SD card.
+* Delete everything but the kernel files from Hybrid Micro-SD
+  card.
 
 * Copy everything but the kernel from the `ubuntu` directory
   over to the hybrid Micro-SD, shut down Raspaian and boot
@@ -1075,39 +1082,52 @@ So here is an overview of what is going to happen:
 
 The article
 [6 Steps for Minimal Ubuntu Installation Using debootstrap](http://www.thegeekstuff.com/2010/01/debootstrap-minimal-debian-ubuntu-installation/)
-provides additional information.
+provides some additional insight.
 
 ### Install Raspian to Micro-SD Cards
 
 Perform the following steps:
 
+* Obtain two micro-SD cards.  Label one "Raspian" and the other
+  "Hybrid".
+
 * Download the Raspian Debian Wheezy release from
   [Raspberry Pi 2 Downloads web page](http://www.raspberrypi.org/downloads/).
 
-* Unzip the downloaded file to get `2015-01-32-raspian.img`.
+* Unzip the downloaded `.zip` file to get `2015-01-32-raspian.img`.
 
-* Using the `dd` command copy the image to a micro-SD card.
-  See the section above on the Beaglebone Black about how
-  to use the `dd` command to copy the image to the micro-SD card.
+* Using the `dd` command copy the image to the "Raspian"
+  micro-SD card.  (See the section above on the Beaglebone Black
+  about how to use the `dd` command to copy the image to the
+  micro-SD card.)  This can take 10-20 minutes depending up various factors.
 
-* Install, a USB to serial cable on pins 6 (Ground)
-  pin 8 (TXD) and pin 10 (RXD).  Fire up `minicom` and
-  configure `minicom` to run in 8N1 mode at 11520 baud
-  with no hardware flow control.
+* Do the same `dd` command to copy the same image to "Hybrid"
+  micro-SD card.
 
-* It should boot in console mode.  You can log in via user "pi"
-  and password "raspberry".
+* Plug the HDMI monitor and USB keyboard into the RasPi2.
+  Insert the "Raspian" micro-SD card into the RasPi2.
+  Power up the RasPi2.
 
-* You can shut down the system with `sudo halt`.
+* You should see the boot messages on the screen and it should
+  eventually prompt you with `login:`.  You can log in as user `pi`.
+  with a password of `raspberry`.
 
-Label one of the Raspian micro-SD cards "Hybrid" and label
-the other micro-SD card as Raspian.
+* Expand the disk.  (This could be more descriptive.)
 
-### Next step
+* Connect one end of the network cable to the RasPi2 and the
+  other to your network.
 
-* Boot the Raspian Micro-SD on the RasPi2.
+* Perform the following commands to update the repository
+  list and upgrade the packages:
 
-* Create a directory:
+        sudo apt-get update
+        sudo apt-get upgrade
+
+* Leave the RasPi2 running for the next set of steps:
+
+### Download Ubuntu to the "Raspian" micro-SD:
+
+* Create a `ubuntu` directory:
 
         cd ~
         mkdir ubuntu
@@ -1120,14 +1140,36 @@ the other micro-SD card as Raspian.
 
 * Run the debootstrap command:
 
-        # Get the command from Mike
+        # Get the debootstrap command arguments from Mike
 
-* Copy some files over:
+* Copy `/etc/fstab`:
 
         cp /etc/fstab ~/ubuntu/etc
+
+* Copy and edit `/etc/resolv.conf`
+
         cp /etc/resolv.conf ~/ubuntu/resolve.conf
+
+  Notice that `resolv` is spelled without an `e`.  (It is an
+  old archaic Unix thing.)  Edit `/etc/resolv` so that the two
+  `nameserver` lines look like:
+
+        nameserver 8.8.8.8
+        nameserver 8.8.4.4
+
+* Copy and edit `/etc/hostname`:
+
         cp /etc/hostname ~/ubuntu/hostname
+
+  If you want to change the hostname from `pi` to something
+  else please do so.
+
+* Copy and edit `/etc/hosts`:
+
         cp /etc/hosts ~/ubuntu/hosts
+
+  Edit `/etc/hosts` to change all occurrences of `pi` to
+  your new host name.  (See previous step.)
 
 * Mount `/proc` on `~/ubuntu/proc`:
 
@@ -1146,15 +1188,35 @@ the other micro-SD card as Raspian.
   install ubuntu packages into the ~/ubuntu/ file system.
   (This is really, really sneaky!!!!)
 
-  Install the following packages
+  Install the following packages:
 
-        sudo apt-get install sudo net-tools vim openssh-client
-        sudo apt-get install openssh-server ping
-        \# What else needs to be installed?
+        sudo apt-get install sudo net-tools vim
+        sudo apt-get install openssh-client openssh-server ping
+        # What else needs to be installed?
 
-* Create `pi` user with a password of `pi`:
+* Manually install the following debian packages:
 
-        # Use the `add-user` command here:
+        sudo mkdir /kernel
+        cd /kernel
+        export DEBHOST=http://archive.raspberrypi.org/debian/pool/main/r/raspberrypi-firmware
+        export DEBSUFFIX=1.20150214-1_armhf.deb
+        sudo wget $DEBHOST/libraspberrypi-bin_$DEBSUFFIX
+        sudo wget $DEBHOST/libraspberrypi-dev_$DEBSUFFIX
+        sudo wget $DEBHOST/libraspberrypi-doc_$DEBSUFFIX
+        sudo wget $DEBHOST/libraspberrypi0_$DEBSUFFIX
+        sudo wget $DEBHOST/raspberrypi-bootloader_$DEBSUFFIX
+        sudo dpkg -i *.deb
+
+  There may be some issues to resolve with the commands above.
+
+* Create new user:
+
+  Note, substitute the new user account name for `USER` in
+  the command below:
+
+        # Use the `adduser` command here:
+        sudo adduser --home /home/USER
+        # Provide passwords here.
 
 * Exit `chroot`:
 
@@ -1179,14 +1241,25 @@ to the Hybrid micro-SD:
         sudo mount /dev/?? /mnt/hybrid 
         cd /mnt/hybrid 
 
-* Delete everything but the `modules` and `/boot` directories.
+* Delete everything but the `/lib/modules` and `/boot` directories.
 
         # Where is the modules directory?
         sudo -s
         cd /mnt/hybrid
+
+        # Hang onto `/lib/modules`:
+        mkdir -p boot/lib_modules
+        mv lib/modules/ boot/lib_modules
+
         # Make darn sure you are deleting from the /mnt/hybrid:
-        rm -rf bin dev etc home lib media opt sbin sys usr var
-        # Am I missing any?
+        cd /mnt/hybrid
+        rm -rf bin dev etc home lib media opt proc sbin sys usr var
+
+        # Restore some directories:
+        mkdir -p mnt proc lib
+
+        # Restore `/lib/modules`
+        mv boot/lib_modules lib/modules
 
 * Copy the contents of `~/ubuntu` over to `~/mnt/hybrid`
 
@@ -1205,6 +1278,7 @@ to the Hybrid micro-SD:
 
         sudo halt
 
+
 ### Boot the hybrid micro-SD:
 
 * Install the Hybrid micro-SD into RasPi2.
@@ -1217,17 +1291,25 @@ to the Hybrid micro-SD:
 
 ### Networking:
 
-We for now, we manually bring up the network:
+To manually mount the `eth0` network adapter from the
+command line:
 
-        ifconfig eth0 192.168.x.y netmask 255.255.255
-        route add default gw 192.168.x.yy
+        ifconfig eth0 192.168.x.y netmask 255.255.255.0
+        route add default gw 192.168.x.z eth0
 
-Install more stuff.
+To configure networking to boot up automatically edit
+`/etc/network/interfaces` to have the following lines:
 
-When you figure it out, add the steps to the instructions
-above.
+        auto eth0
+        iface eth0 inet static
+        address 192.168.x.y
+        gateway 192.168.x.z
 
-Rinse, Lather, Repeat!
+Comment out or delete all other lines concerning `eth0`.
+When you reboot, the wired ethernet connection should
+come up automatically.
+
+### Installing ROS
 
 
 
