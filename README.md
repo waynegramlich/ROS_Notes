@@ -772,7 +772,6 @@ Below are
         sudo apt-get install python-rosinstall		# ~4min
 
 * Configuring WiFi:
-
   I found the
   [nmcli discssion](http://arstechnica.com/civis/viewtopic.php?t=1163023)
   to be interesting and useful.
@@ -1008,6 +1007,101 @@ In `.../catkin_ws/src/new_package_name`, do the following:
 All done.
 
 ## ROS on Raspberry Pi 2
+
+We are going to shorten Raspberry Pi 2 down to RasPi2
+just to save a little typing.
+
+Currently (as of Feb2015), the only two precompiled systems
+for the RasPi2 supplied by the Raspberry Pi Foundation are
+[Raspian and Ubuntu Snappy](http://www.raspberrypi.org/downloads/).
+Ubuntu Snappy has a new package manager called snappy which
+is not based on Debian packages.  Currently, ROS only runs
+on Ubuntu with Debian packages.  Thus, Ubuntu Snappy is not
+compatible with ROS.  While
+[OSR intends to support Ubuntu Snappy](http://www.osrfoundation.org/ubuntu-ros-apps-on-the-way/), it may take a while to work out all of the issues.
+
+Until the get around to posting Ubuntu image that runs on
+the RasPi2 that uses Debian packages, we have to look elsewhere
+for a bootable image.
+
+For now the following
+[thread](http://www.raspberrypi.org/forums/viewtopic.php?f=56&t=98997)
+on the Raspberry Pi forums provides a Ubuntu image that boots on
+the RasPi2.  This information is going to be very short lived, so
+this section will probably be stale in less than a month (say by
+15Mar2015.)
+
+Read through the thread and grab the latest image.  The
+message dated 2015 Feb 16 @ 4:39am by `lucario` prvides
+an image.  Download it, unzip it, and install it on a micro-SD
+card.
+
+Plug the RasPi2 into a HDMI monitor, with USB keyboard and USB mouse.
+Plug the RasPi2 into your network with an RJ45 cable.
+Now apply power.  It should boot right up.  Select the `Linaro`
+user and supply a password of `Linaro`.  You should be in.
+
+To enable `zeroconf`, do the following:
+
+        sudo apt-get install libnss-mdns
+
+Follow the standard instructions for installing ROS from the
+  [ROS UbuntuArm](http://wiki.ros.org/indigo/Installation/UbuntuARM)
+page:
+
+        sudo update-locale LANG=C LANGUAGE=C LC_ALL=C LC_MESSAGES=POSIX
+        sudo sh -c 'echo "deb http://packages.namniart.com/repos/ros trusty main" > /etc/apt/sources.list.d/ros-latest.list'
+        wget http://packages.namniart.com/repos/namniart.key -O - | sudo apt-key add -
+        time sudo apt-get update			# ~1min
+        time sudo apt-get install ros-indigo-ros-base	# ~15in
+        sudo apt-get install python-rosdep
+        time rosdep update				# ~1min
+        echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
+        source ~/.bashrc
+        sudo apt-get install python-rosinstall		# ~4min
+
+To check whether or not ROS is working:
+
+        roscore
+	# See whether it prints some stuff out...
+        # ... if it does, type Control-C to shut it down.
+
+Right now we configure WiFi by editing the `/etc/network/interfaces` file:
+
+        sudo vi /etc/network/interfaces
+
+Add the following:
+
+        allow-hotplug wlan0
+        iface wlan0 inet dhcp
+        wpa-essid "YourNetworkID"
+        wpa-psk "yourSecretPassword"
+
+Now plug in the USB WiFi dongle.  Only the RealTek 8192CU dongle
+has been tested.
+
+        ifconfig
+        # Should list devices `lo`, `eth0`, and `wlan0`
+
+Now shut down `eth0` and `wlan0`:
+
+        sudo ifdown eth0
+        sudo ifdown wlan0
+
+Now bring up only `wlan0`:
+
+        sudo ifup wlan0
+
+Verify that everything workds:
+
+        ping google.com
+        # Type control-C after a few lines come through
+
+Done.
+
+## ROS on Raspberry Pi 2 (OLD)
+
+*** This section is no longer useful.  Read the previous section. ***
 
 We are going to shorten Raspberry Pi 2 down to RasPi2
 just to save a little typing.
