@@ -43,6 +43,13 @@ However, we recommend that you start at the
 wiki page.  The meat of the ROS concepts is in the section
 entitled "ROS Computational Graph Level".
 
+In addition, there is a book entitled
+  ["A Gentle Introduction to ROS"](http://www.cse.sc.edu/~jokane/agitr/agitr-letter.pdf)
+by Jason M. O'Kane that provides a smoother more conceptual
+intruction to ROS than the ROS tutorials currently do.
+This book was found at
+[Jason's web site](http://www.cse.sc.edu/~jokane/agitr/).
+
 ROS is really a meta operating system that is layered on
 top of a more traditional operating system.  As of early
 2015, the primary operating system is Linux, although there
@@ -295,6 +302,213 @@ the following name spaces:
 
 * *Parameters*: The parameters name space appears to be hierarchical.
 `rosparam list` lists the currenta active parameters.
+
+## ROS Parameters
+
+The ROS parameter system seems to evolved over time and
+there does not appear to be a coherent explanation of 
+how it all fits together.
+
+The basic concepts behind parameters appear to be:
+
+* The [Parameter Server](http://wiki.ros.org/Parameter%20Server).
+  is a ROS node that provide a hierachical naming service.
+
+* There is both a
+  [Python API](http://wiki.ros.org/rospy/Overview/Parameter%20Server)
+  and a
+  [C++ API](http://wiki.ros.org/roscpp/Overview/Parameter%20Server)
+  that can be used for getting, setting, and deleting parameter values
+  in the parameter server.
+
+* The [ROS Launch](http://wiki.ros.org/roslaunch) facility
+  provides a mechanism for setting parameter values, prior to
+  starting the nodes the constitute a ROS system.
+
+* The [Dynamic Reconfigrure](http://wiki.ros.org/dynamic_reconfigure/Tutorials)
+  facility allows for the dynamic is useful to manuipulate parameters
+  in real time.
+
+### Parameter Server
+
+The [Parameter Server](http://wiki.ros.org/Parameter%20Server)
+seems to use a hybrid naming system that consists of
+/NAMESPACE/NODE_NAME/NAME_PATH, where:
+
+* NAMESPACE is the name space that contains the node name.
+  It could be the global namespace `/`.
+
+* NODE_NAME is a ROS node name within the namespae.
+
+* NAME_PATH is either a single top level parameter name or
+  a nested hierarchical parameter name.
+
+Very frequently, "/NODE_NAME/" is replaced by "~" to provide
+a "private parameter".  Thus, "~parameter_name", is equivalant
+to "/my_unique_node_name/parameter_name".
+
+In order for a parameter to show up in the parameter server,
+some process has to put it there.  The ROS node can do this
+explicitly or it can be done via a ROS `.launch` file.
+
+Likewise, for a parameter to be removed from the parameter
+server some process has to remove it.  There is no documented
+mechanism for cleaning out stale parameters when a node shuts
+down.  (Really?)
+
+The [`rosparam`](http://wiki.ros.org/rosparam) command line program
+can be used to access and manipulate contents of the ROS parameter
+server.
+
+The supported parameter types are bool, int, float, string,
+lists, dictionaries, dates, and binary blobs.
+
+### Python Client Interface
+
+The most common usage for getting a parameter is:
+
+        parameter = rospy.get_param("~parameter_name", default_value)
+
+where `default_value` is returned if the "~parameter_name" is
+not in the parameter server.  Calling this routine does *NOT*
+insert anything into the parameter server.  If it is not
+explicitly put int to server, the `rosparam` command can not
+see it.  Calling `rospy.get_param` without a default value will
+throw a `KeyError` exception the parameter name is not in the
+parameter server.
+
+A parameter can be inserted into the parameter server as follows:
+
+        rospy.set_param("~parameter_name", parameter_value)
+
+If the `~parameter_name` is not present, it is created and set to
+`parameter_value`; otherwise, the previous value is overwritten
+with `parameter_value`.  If you want the parameter to be
+removed when the node goes away, you will need to explicitly
+do this by calling `rospy.delete_param`.  Below is an overview
+of one way to manage this:
+
+        # Get parameters:
+        if rospy.has_param("~parameter_name"):
+            parameter = rospy.get_param("~parameter_name")
+        else:
+            parameter = 123
+	    rospy.set_param("~parameter_name", parameter)
+
+        # Main node loop:
+        while not rospy.is_shutdown():
+            # ...
+
+        # Delete the parameter
+        rospy.delete_param("~parameter_name")
+
+In the Python API documentation, the following zinger is present:
+
+> NOTE: parameter server methods are not threadsafe,
+> so if you are using them from multiple threads,
+> you must lock appropriate[ly].
+
+Multi-threading is an issue for dynamic reconfiguration.
+
+### ROS Launch
+
+The [ROS Launch](http://wiki.ros.org/roslaunch) facility
+has the ability to set parameters in the parameter server.
+
+Parameters are set in a `.launch` file, using `<param .../>'
+and `<rosparam .../>` tags.  The `<param .../>` tag sets a
+single parameter in the parameter server.  The `<rosparam .../>`
+tag permits the setting of multiple parameters in the the parameter
+server.  It can do this using
+  [YAML](http://wiki.ros.org/YAML%20Overview)
+(YAML Ain't Markup Language) syntax.  In particular, the
+`<rosparam .../>` tag has a mechanism for reading in a
+file that is in YAML format.
+
+As a random comment, in section 5.3 (Setting Parameters) of th
+  [roslaunch/XML](http://wiki.ros.org/roslaunch/XML)
+documentation, it states:
+
+> You can also set parameters on the Parameter Server. These
+> parameters will be stored on the Parameter Server before any
+> nodes are launched.
+
+Conversely, earlier in section 1 (Evaluation Order) it says:
+
+> `roslaunch` evaluates the XML file in a single pass.
+> Includes are processed in depth-first traversal order.
+> Tags are evaluated serially and the *last setting wins*.
+> Thus, if there are multiple settings of a parameter,
+> the last value specified for the parameter will be used.
+
+These two statements do not seem agree with one another.
+The prudent thing to do is to put all `<param .../>` and
+`<rosparam .../>` tags prior to the associated `<node .../>`
+tags in the `.launch` file.
+
+Digging under the covers, we discover that when `roslaunch`
+encounters a `<node .../>` tag, it starts the node program
+using the `rosrun` command.
+
+The `rosrun` command allows the node name specified in the
+node code to be overriden from the command line using a
+command line argument of the form:
+
+        rosrun PACKAGE EXECUTABLE __name=NEW_NODE_NAME ...
+
+Somehow, the Python line:
+
+        rospy.init_node("NODE_NAME", ...)
+
+will use `NEW_NODE_NAME` from the command line instead of
+`NODE_NAME` from code.
+
+ROS `.launch` files can nest throught the `<include .../>` tag.
+
+### Dynamic Reconfigure
+
+### Combining It All
+
+Within the node code, we need to do the following:
+
+* Initialize each parameter using the following code:
+
+        import yaml
+
+        def dynamic_callback(config, level):
+            assert isinstance(config, dict)
+            
+	
+	def main():
+	    # At startup for each parameter:
+	    parameters = {}
+            parameters["parameter1"] = # default parameter 1
+            parameters["parameter2"] = # default parameter 2
+            parameters["parameter3"] = # default parameter 3
+            # ...:
+            parameters["parameterN"] = # default parameter N
+
+	    # Stuff everything into the parameter server:
+            for parameter_name in parameters.keys():
+		private_name = "~" + parameter_name
+                if rospy.has_param(private_name):
+                    parameters[parameter_name] = rospy.get_param(private_name)
+                else:
+                    rospy.set_param(private_name, parameters[parameter_name])
+	
+	    while not rospy.is_shutdown():
+                #....
+
+            # During shutdown, write out the YAML:
+            yaml_out_stream = open("...", "wa")
+            out_stream.write(yaml.dump(parameters))
+            yaml_out_stream.close()
+
+
+### ROS `package.xml`
+
+The documentation for [`package.xml`](http://www.ros.org/reps/rep-0127.html)
+format is worth reading.
 
 ## Installing Ubuntu on a Beaglebone Black
 
@@ -764,8 +978,9 @@ Below are
         sudo sh -c 'echo "deb http://packages.namniart.com/repos/ros trusty main" > /etc/apt/sources.list.d/ros-latest.list'
         wget http://packages.namniart.com/repos/namniart.key -O - | sudo apt-key add -
         time sudo apt-get update			# ~1min
-        time sudo apt-get install ros-indigo-ros-base	# ~14min
+        time sudo apt-get install ros-indigo-ros-base	# ~10min
         sudo apt-get install python-rosdep
+	rosdep init
         time rosdep update				# ~1min
         echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
         source ~/.bashrc
@@ -780,8 +995,8 @@ Below are
   seem to be interacting with one another:
 
   * *systemd*. This is the new dependency based system initialization
-    system.  There is a great deal of contraversy about it.  Regardless,
-    of the contraversy, it is what is used for initialization in the
+    system.  There is a great deal of controversy about it.  Regardless,
+    of the controversy, it is what is used for initialization in the
     kernel that ships with the Banana Pro.
 
   * *dbus*.  This is a general purpose publish and subscribe messaging
@@ -1011,39 +1226,153 @@ All done.
 We are going to shorten Raspberry Pi 2 down to RasPi2
 just to save a little typing.
 
-Currently (as of Feb2015), the only two precompiled systems
-for the RasPi2 supplied by the Raspberry Pi Foundation are
-[Raspian and Ubuntu Snappy](http://www.raspberrypi.org/downloads/).
-Ubuntu Snappy has a new package manager called snappy which
-is not based on Debian packages.  Currently, ROS only runs
-on Ubuntu with Debian packages.  Thus, Ubuntu Snappy is not
-compatible with ROS.  While
-[OSR intends to support Ubuntu Snappy](http://www.osrfoundation.org/ubuntu-ros-apps-on-the-way/), it may take a while to work out all of the issues.
+As of 15Apr2015, a version of Ubuntu 14.04 LTS is available
+for the RasPi2 from the
+  [Raspberry Pi 2 Ubuntu Page](https://wiki.ubuntu.com/ARM/RaspberryPi).
+More specically, download the image and unpack it:
 
-Until the get around to posting Ubuntu image that runs on
-the RasPi2 that uses Debian packages, we have to look elsewhere
-for a bootable image.
+        cd ...	# Decide where you are going to download to.
+        wget http://www.finnie.org/software/raspberrypi/2015-04-06-ubuntu-trusty.zip
+	unzip unzip 2015-04-06-ubuntu-trusty.zip
 
-For now the following
-[thread](http://www.raspberrypi.org/forums/viewtopic.php?f=56&t=98997)
-on the Raspberry Pi forums provides a Ubuntu image that boots on
-the RasPi2.  This information is going to be very short lived, so
-this section will probably be stale in less than a month (say by
-15Mar2015.)
+Follow the directions:
 
-Read through the thread and grab the latest image.  The
-message dated 2015 Feb 16 @ 4:39am by `lucario` prvides
-an image.  Download it, unzip it, and install it on a micro-SD
-card.
+        sudo apt-get install bmap-tools
+        sudo bmaptool copy --bmap 2015-04-06-ubuntu-trusty.bmap 2015-04-06-ubuntu-trusty.img /dev/mmcblk0
+        sync
 
-Plug the RasPi2 into a HDMI monitor, with USB keyboard and USB mouse.
-Plug the RasPi2 into your network with an RJ45 cable.
-Now apply power.  It should boot right up.  Select the `Linaro`
-user and supply a password of `Linaro`.  You should be in.
+Note that the date `2015-04-06` may have to be changed to some
+other date you have downloaded a newer release.  The `/dev/mmcblk0`
+may need to be a different device; see the section on find
+your micro-SD card device.
 
-To enable `zeroconf`, do the following:
+Next, you need to do the following:
+
+* Remove the micro-SD card from your laptop/desktiop.
+
+* Plug the micro-SD card into your RasPi2.
+
+* Connect an HDMI cable between RasPi2 and an HDMI display.
+
+* Plug a USB keyboard into one of the USB ports on the RasPi2.
+
+* Connect an Ethernet cable between your network and the RasPi2.
+
+Power up the RasPi2.  It will scroll a whole bunch of stuff
+and eventually prompt with `... login:`.  The user name is
+`ubuntu` and the password is `ubuntu`.  After you log in,
+please do the following:
 
         sudo apt-get install libnss-mdns
+        sudo apt-get install openssh-server
+
+`libnss-mdns` is the "zeroconf" package for networking.
+`openssh-server` is a server that will allow you to log
+into your RasPi2 over the network.
+
+We want your laptop/desktop to support both "openssh" and
+"zeroconf".  So, from your laptop, do the following:
+
+        sudo apt-get install libnss-mdns
+        sudo apt-get install openssh-server
+        cat /etc/hostname
+
+The last command should print out the hostname of the
+laptop/desktop.  In the samples below, we will assume
+that the host name is `myhostname`.  Now, we make
+sure that we have "zeroconf" working on your desktop/laptop:
+
+        ping myhostname.local
+
+You should get some message that look like:
+
+        PING myhostname.local (129.168.##.##) 56(84) bytes of data.
+        64 bytes from 192.168.0.5: icmp_seq=1 ttl=64 time=0.054 ms
+        64 bytes from 192.168.0.5: icmp_seq=2 ttl=64 time=0.067 ms
+        64 bytes from 192.168.0.5: icmp_seq=3 ttl=64 time=0.062 ms
+        ...
+
+If that works, "zeroconf" is working with your laptop/desktop.
+Type Control-C to stop the `ping` program.
+
+Now make sure that your laptop/desktop can find the RasPi2.
+
+        ping ubuntu.local
+
+You should get a similar set of messages.  Type Control-C
+to stop the `ping` program.
+
+Now we want to log into the RasPi2:
+
+        ssh -l ubuntu unbuntu.local
+
+You should get a dialog that looks roughly as follows:
+
+        The authenticity of host 'ubuntu.local (192.168.##.##)' can't be established.
+        ECDSA key fingerprint is d5:f0:41:...:f5.       # A bunch of hex stuff
+        Are you sure you want to continue connecting (yes/no)? yes  # Type `yes`
+        Warning: Permanently added 'ubuntu.local,192.168.##.' (ECDSA) to the list of known hosts.
+        ubuntu@ubuntu.local's password:      # Type `ubuntu` here
+        Welcome to Ubuntu 14.04.2 LTS (GNU/Linux 3.18.0-20-rpi2 armv7l)
+        ubuntu@ubuntu:~$
+
+If you get this, you have successfully logged in to your RasPi2.
+Now we reboot the RasPi2 from your desktop/laptop.  From the
+windo that has the `ubuntu@ubuntu:~$` prompt, type:
+
+        sudo reboot
+        [sudo] password for ubuntu:     # Type `ubuntu` here
+
+You should get the following:
+
+        Broadcast message from ubuntu@ubuntu
+                (/dev/pts/0) at 19:33 ...
+
+        The system is going down for reboot NOW!
+        Connection to ubuntu.local closed by remote host.
+        Connection to ubuntu.local closed.
+
+Followed by a prompt from your desktop/laptop.
+
+Wait about 60 seconds and the RasPi2 should be rebooted.
+Now login to the RasPi2 again:
+
+        ssh -l ubuntu ubuntu.local
+        
+You should get a shorter message this time:
+
+        ubuntu@ubuntu.local's password:   # Type `ubuntu` here
+        Welcome to Ubuntu 14.04.2 LTS (GNU/Linux 3.18.0-20-rpi2 armv7l)
+
+         * Documentation:  https://help.ubuntu.com/
+        Last login: Wed Apr 15 20:03:01 2015 from 192.168.1.5
+        ubuntu@ubuntu:~$ 
+
+Now you can safely halt the machine with the following command:
+
+        sudo halt
+        [sudo] password for ubuntu: 
+
+        Broadcast message from ubuntu@ubuntu
+                (/dev/pts/0) at 20:04 ...
+
+        The system is going down for halt NOW!
+        ubuntu@ubuntu:~$ Connection to ubuntu.local closed by remote host.
+        Connection to ubuntu.local closed.
+
+Now dow the following:
+
+* Remove power from the RasPi2.
+
+* Unplug both your HDMI cable and USB keyboard.
+
+* Leave the Ethernet cable installed.
+
+* Now power up the RasPi2 again.
+
+After 60 seconds or so, log in using:
+
+        ssh -l ubuntu ubuntu.local
 
 Follow the standard instructions for installing ROS from the
   [ROS UbuntuArm](http://wiki.ros.org/indigo/Installation/UbuntuARM)
@@ -1052,19 +1381,27 @@ page:
         sudo update-locale LANG=C LANGUAGE=C LC_ALL=C LC_MESSAGES=POSIX
         sudo sh -c 'echo "deb http://packages.namniart.com/repos/ros trusty main" > /etc/apt/sources.list.d/ros-latest.list'
         wget http://packages.namniart.com/repos/namniart.key -O - | sudo apt-key add -
-        time sudo apt-get update			# ~1min
-        time sudo apt-get install ros-indigo-ros-base	# ~15in
+        time sudo apt-get update			# ~1 min
+        time sudo apt-get install ros-indigo-ros-base	# ~10 min
         sudo apt-get install python-rosdep
-        time rosdep update				# ~1min
+        sudo rosdep init
+        time rosdep update				# ~1 min
         echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
         source ~/.bashrc
-        sudo apt-get install python-rosinstall		# ~4min
+        time sudo apt-get install python-rosinstall	# ~4 min
+	sudo apt-get install build-essential		# ~2 min
 
 To check whether or not ROS is working:
 
         roscore
 	# See whether it prints some stuff out...
         # ... if it does, type Control-C to shut it down.
+
+
+Install the arduino stuff:
+
+        sudo apt-get install avrdude-doc gcc-avr avrdude avr-libc binutils-avr
+        sudo apt-get install libcv-dev libopencv-dev
 
 Right now we configure WiFi by editing the `/etc/network/interfaces` file:
 
@@ -1097,6 +1434,11 @@ Verify that everything workds:
         ping google.com
         # Type control-C after a few lines come through
 
+To log onto the matchine over the WiFi:
+
+        ssh -l linaro raspberry.local
+        {password is 'linaro'}
+
 Done.
 
 ## ROS on Raspberry Pi 2 (OLD)
@@ -1113,7 +1455,7 @@ Ubuntu Snappy has a new package manager called snappy which
 is not based on Debian packages.  Currently, ROS only runs
 on Ubuntu with Debian packages.  Thus, Ubuntu Snappy is not
 compatible with ROS.  While
-[OSR intends to support Ubuntu Snappy](http://www.osrfoundation.org/ubuntu-ros-apps-on-the-way/), it may take a while to work out all of the issues.
+[OSRF intends to support Ubuntu Snappy](http://www.osrfoundation.org/ubuntu-ros-apps-on-the-way/), it may take a while to work out all of the issues.
 
 So, for now (Feb2015), that leaves us with the Raspian release.
 Raspian boots just fine on the RasPi2.  The issue is that
