@@ -65,6 +65,7 @@ Note a workstation is a desktop or laptop with a 64-bit Intel processor on it.
     * `cd ~/catkin_ws`
     * `catkin_make`
   * Create `~/.ros_setup` to contain:
+
         cat << EOF > ~/.ros_setup
         # Only `source /opt/ros/kinetic/setup.bash` if we have not already done so.
         # We assume that this script does not change very often:
@@ -86,6 +87,7 @@ Note a workstation is a desktop or laptop with a 64-bit Intel processor on it.
         export ROSLAUNCH_SSH_UNKNOWN=1
         export ROS_MASTER_URI=http://`hostname`.local:11311
         EOF
+
   * Edit your `~/.bashrc` to have the `source ~/.ros_setup` in it.
   * Run `source ~/.bashrc` to force you current shell to have ROS stuff in it.
 
