@@ -114,6 +114,44 @@ Note a workstation is a desktop or laptop with a 64-bit Intel processor on it.
 
 ## Install ROS onto a Raspberry Pi 3B or 3B+
 
+* Download ubiquity robotics Raspberry Pi image.
+  * Create a `~/downloads` directory (`mkdir -p ~/downloads`).
+  * Change to the `~/downloads` directory (`cd ~/downloads`).
+  * Download the [Raspberry Pi Image](https://downloads.ubiquityrobotics.com/pi.html)
+    with the following command:
+
+       wget https://cdn.ubiquityrobotics.net/2018-01-13-ubiquity-xenial-lxde-raspberry-pi.img.xz
+
+     (Note: this link will be changing soon.)
+
+  * Run the Gnome Disk Utility (`gnome-disks`).
+  * Plug a USB to SD/micro-SD device into free USB port on your workstation.  Make sure you
+    use one of the older USB to SD/micro-SD devices, the work better.
+  * On the VirtualBox menu bar, select `[Devices=>USB=>XXX]` where XXX coresponds to the
+    device you just plugged in.  XXX will be something `Generic Storage Device`.
+  * The storage device should show up in the disk utility as something like `VBOX HARDDISK`.
+  * Using the settings icon in the upper right corner of the disk utility (i.e. 3 short
+    horizontal lines), `select [# => Restore Disk Image]`.
+  * Use the file chooser to select
+    `~/downloads/2018-01-13-ubiquity-xenial-lxde-raspberry-pi.img.xz` and click `[Open]`
+    followed by `Start Restoring...`.
+
+* Boot The Raspberry Pi image.
+  * Boot the Raspberry Pi:
+    * The most reliable way to boot the image is to find and HDMI cable, a USB mouse,
+      a USB keyboard and plug them into the Raspberry Pi.
+    * Plug in the micro-SD card.
+    * Apply power to the Raspberry Pi.
+    * After the image boots login as user `ubuntu` and password `ubuntu`.
+    * Open a terminal window. 
+
+* Do the same system administration as you did for you workstation.  Make sure you
+  select a NEWHOSTNAME that is different from you workstation.  You should use the
+  same USER account.  Create the catkin workspace, but do not download either the
+  `ROS_Notes` or `ubiquity_launches` packages.  Do not try to run the robot simulator.
+
+* Run `pyfi` to configure your WiFi...
+
 ## Install Raspberry Pi camera onto RasPi
 
 ## Install Raspberry Pi on Loki
