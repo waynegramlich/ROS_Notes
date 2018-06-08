@@ -125,7 +125,8 @@ Note a workstation is a desktop or laptop with a 64-bit Intel processor on it.
   * Download the [Raspberry Pi Image](https://downloads.ubiquityrobotics.com/pi.html)
     with the following command:
 
-       wget https://cdn.ubiquityrobotics.net/2018-01-13-ubiquity-xenial-lxde-raspberry-pi.img.xz
+    <!--wget https://cdn.ubiquityrobotics.net/2018-01-13-ubiquity-xenial-lxde-raspberry-pi.img.xz-->
+        wget https://cdn.ubiquityrobotics.net/2018-06-02-ubiquity-xenial-lxde-raspberry-pi.img.xz
 
      (Note: this link will be changing soon.)
 
