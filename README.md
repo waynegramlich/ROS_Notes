@@ -139,7 +139,7 @@ Note a workstation is a desktop or laptop with a 64-bit Intel processor on it.
   * Using the settings icon in the upper right corner of the disk utility (i.e. 3 short
     horizontal lines), `select [# => Restore Disk Image]`.
   * Use the file chooser to select
-    `~/downloads/2018-01-13-ubiquity-xenial-lxde-raspberry-pi.img.xz` and click `[Open]`
+    `~/downloads/2018-06-02-ubiquity-xenial-lxde-raspberry-pi.img.xz` and click `[Open]`
     followed by `Start Restoring...`.
 
 * Boot The Raspberry Pi image.
