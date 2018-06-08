@@ -103,7 +103,12 @@ Note a workstation is a desktop or laptop with a 64-bit Intel processor on it.
     * Enter you catkin workspace (`cd ~/catkin_ws/src`)
     * Install `ros_notes` (`git clone https://github.com/waynegramlich/ROS_Notes.git`)
     * Install `ubiquity_launches` (`git clone https://github.com/waynegramlich/ROS_Notes.git`)
-  * Run the robot simulator:
+  * Install some missing packages:
+    * `sudo apt-get install ros-kinetic-turtlebot-description`
+    * `sudo apt-get install ros-kinetic-robot-state-publisher`
+    * `sudo apt-get install ros-kinetic-yocs-velocity-smoother`
+    * `sudo apt-get install ros-kinetic-yocs-cmd-vel-mux`
+    * `sudo apt-get install ros-kobuki-safety-controller`
   * Run robot simulator (`./ubiquity_launches/bin/keyboard_navigate`)
     * When RVIZ comes up select `[2D Nav Goal]`.
     * User mouse click mouse in middle of maze and drop an arrow that points in any direction.
