@@ -102,9 +102,11 @@ Note a workstation is a desktop or laptop with a 64-bit Intel processor on it.
         [Cntrl-C]
 
   * Install a couple of packages into your ROS workspace:
-    * Enter you catkin workspace (`cd ~/catkin_ws/src`)
-    * Install `ros_notes` (`git clone https://github.com/waynegramlich/ROS_Notes.git`)
-    * Install `ubiquity_launches` (`git clone https://github.com/waynegramlich/ROS_Notes.git`)
+
+        cd ~/catkin_ws/src
+        git clone https://github.com/waynegramlich/ROS_Notes.git
+	git clone https://github.com/UbiquityRobotics/ubiquity_launches.git
+
   * Install some missing packages:
 
         sudo apt-get install ros-kinetic-turtlebot-description
