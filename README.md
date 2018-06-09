@@ -93,12 +93,14 @@ Note a workstation is a desktop or laptop with a 64-bit Intel processor on it.
 
 * Verify that ROS runs on virtual machine:
   * Do a sanity check that ROS is available:
+
         roscore &
         rosnode list
         rostopic list
         rossrv list
         fg %roscore
         [Cntrl-C]
+
   * Install a couple of packages into your ROS workspace:
     * Enter you catkin workspace (`cd ~/catkin_ws/src`)
     * Install `ros_notes` (`git clone https://github.com/waynegramlich/ROS_Notes.git`)
