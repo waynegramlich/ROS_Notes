@@ -115,7 +115,7 @@ Note a workstation is a desktop or laptop with a 64-bit Intel processor on it.
         sudo apt-get install ros-kinetic-yocs-cmd-vel-mux
         sudo apt-get install ros-kobuki-safety-controller
 
-    * Run robot simulator (`./ubiquity_launches/bin/keyboard_navigate`)
+  * Run robot simulator (`./ubiquity_launches/bin/keyboard_navigate`)
     * When RVIZ comes up select `[2D Nav Goal]`.
     * User mouse click mouse in middle of maze and drop an arrow that points in any direction.
     * Watch the robot drive to the destination.
