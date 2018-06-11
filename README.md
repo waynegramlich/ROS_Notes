@@ -30,7 +30,7 @@ Note a workstation is a desktop or laptop with a 64-bit Intel processor on it.
   * Login as user `ubuntu` and with a password `ubuntu`:
   * Click the terminal window icon (left column with black rectangle and carret) to open terminal.
   * Become superuser `sudo -s` (type in password of `ubuntu`).
-  * From VirtualBox menu bar select `[Devices=>Install Guest Additions CD Image...]`.
+  * From VirtualBox menu bar select `[Devices=>Insert Guest Additions CD Image...]`.
   * Change directory to guest additions directory (`cd /media/ubuntu/VBOXADD*`).
   * Install guest additions (`./runasroot.sh`).
 
