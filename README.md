@@ -60,36 +60,19 @@ Note a workstation is a desktop or laptop with a 64-bit Intel processor on it.
   * Install your favorite editor (`sudo apt-get install emacs`)
 
 * Configure ROS catkin workspace:
-  * Create catkin workspace
-    * `mkdir ~/catkin_ws
-    * `cd ~/catkin_ws`
-    * `catkin_make`
-  * Create `~/.ros_setup` to contain:
+  * Run `mkdir -p ~/catkin_ws/src`
+  * Clone ROS_NOTES repositiory into that newly created directory
 
-        cat << EOF > ~/.ros_setup
-        # Only `source /opt/ros/kinetic/setup.bash` if we have not already done so.
-        # We assume that this script does not change very often:
-        if [ -d "/opt/ros/kinetic/bin" ] ; then
-            case ":$PATH:" in
-            *:/opt/ros/kinetic/bin:*) ;;
-            *) source /opt/ros/kinetic/setup.bash ;;
-            esac
-        fi
-        
-        # Only `source ~/catkin_ws/devel/setup` if it exists:
-        if [ -f ~/catkin_ws/devel/setup.sh ] ; then
-            source ~/catkin_ws/devel/setup.bash ;
-        fi
-        
-        # Define some ROS environment variables:
-        export ROS_CATKIN_WS=$HOME/catkin_ws
-        export ROS_HOSTNAME=`hostname`.local
-        export ROSLAUNCH_SSH_UNKNOWN=1
-        export ROS_MASTER_URI=http://`hostname`.local:11311
-        EOF
+        cd ~/catkin/ws/src
+	git clone https://github.com/waynegramlich/ROS_Notes.git
 
+  * Copy `.ros_setup.bash` up to you home directory
+
+        cp ~/catkin/ws/src/ROS_NOTES/.ros_setup.bash ~
+  
   * Edit your `~/.bashrc` to have the `source ~/.ros_setup` in it.
   * Run `source ~/.bashrc` to force you current shell to have ROS stuff in it.
+  * Run `catkin_make`
 
 * Verify that ROS runs on virtual machine:
   * Do a sanity check that ROS is available:
