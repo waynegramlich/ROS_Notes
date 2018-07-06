@@ -70,7 +70,7 @@ Note a workstation is a desktop or laptop with a 64-bit Intel processor on it.
 
         cp ~/catkin/ws/src/ROS_NOTES/.ros_setup.bash ~
   
-  * Edit your `~/.bashrc` to have the `source ~/.ros_setup` in it.
+  * Edit your `~/.bashrc` to have the `source ~/.ros_setup.bash` in it.
   * Run `source ~/.bashrc` to force you current shell to have ROS stuff in it.
   * Run `catkin_make`
 
@@ -152,6 +152,5 @@ Note a workstation is a desktop or laptop with a 64-bit Intel processor on it.
 ## Install Raspberry Pi on Loki
 
 ## Write first ROS Python Program and run it on Loki
-
 
 
