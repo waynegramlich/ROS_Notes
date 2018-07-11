@@ -153,4 +153,24 @@ Note a workstation is a desktop or laptop with a 64-bit Intel processor on it.
 
 ## Write first ROS Python Program and run it on Loki
 
+* Install AVR/Arduino tool chain on the workstation:
 
+        sudo apt-get install arduino
+        sudo apt-get install binutils gcc-avr avr-libc uisp avrdude flex byacc bison
+
+* Install Arduino, Arduino-Makefile, and bus_loki repos into your workstation:
+
+        cd ~/catkin_ws/src
+	git clone https://github.com/UbiquityRobotics/Arduino.git
+	git clone https://github.com/UbiquityRobotics/Arduino-Makefile.git
+	git clonehttps://github.com/UbiquityRobotics/bus_loki.git
+
+* Build the Loki firmware.
+
+        cd bus_loki/ref_f
+	make clean
+	make
+
+* Plug 3.3V USB DFRobot USB to serial connector into correct connector.
+
+* Type `make upload` to force the firmware into the Loki.
